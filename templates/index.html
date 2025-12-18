@@ -87,9 +87,16 @@
         .features {
             margin-top: 3rem;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            max-width: 800px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        @media (max-width: 500px) {
+            .features {
+                grid-template-columns: 1fr;
+            }
         }
 
         .feature {
