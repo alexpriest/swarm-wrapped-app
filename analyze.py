@@ -8,6 +8,70 @@ from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 import math
 
+# Personality types based on check-in patterns
+PERSONALITY_TYPES = {
+    "coffee_connoisseur": {
+        "name": "The Coffee Connoisseur",
+        "emoji": "☕",
+        "description": "Your year was fueled by caffeine. Coffee shops were your go-to destination.",
+        "categories": ["Coffee Shop", "Café", "Tea Room", "Bakery"]
+    },
+    "globe_trotter": {
+        "name": "The Globe Trotter",
+        "emoji": "🌍",
+        "description": "You're a true explorer. Multiple countries and countless cities on your map.",
+        "threshold": {"countries": 3, "cities": 15}
+    },
+    "foodie": {
+        "name": "The Foodie",
+        "emoji": "🍽️",
+        "description": "Life's too short for bad food. Restaurants dominated your check-ins.",
+        "categories": ["Restaurant", "Food", "Diner", "Bistro", "Eatery"]
+    },
+    "night_owl": {
+        "name": "The Night Owl",
+        "emoji": "🦉",
+        "description": "The night is young! Most of your adventures happened after dark.",
+        "time": "night"
+    },
+    "early_bird": {
+        "name": "The Early Bird",
+        "emoji": "🌅",
+        "description": "Rise and shine! You make the most of mornings.",
+        "time": "morning"
+    },
+    "fitness_fanatic": {
+        "name": "The Fitness Fanatic",
+        "emoji": "💪",
+        "description": "No excuses! Gyms and outdoor activities kept you moving.",
+        "categories": ["Gym", "Fitness", "Yoga", "Park", "Trail", "Pool"]
+    },
+    "social_butterfly": {
+        "name": "The Social Butterfly",
+        "emoji": "🦋",
+        "description": "Never alone! Most of your check-ins were with friends and family.",
+        "threshold": {"friend_percentage": 60}
+    },
+    "adventurer": {
+        "name": "The Adventurer",
+        "emoji": "🧭",
+        "description": "Variety is the spice of life. You rarely visit the same place twice.",
+        "threshold": {"unique_ratio": 0.7}
+    },
+    "homebody": {
+        "name": "The Homebody",
+        "emoji": "🏠",
+        "description": "Home is where the heart is. You know your neighborhood inside and out.",
+        "threshold": {"home_city_percentage": 80}
+    },
+    "jet_setter": {
+        "name": "The Jet Setter",
+        "emoji": "✈️",
+        "description": "Always on the move! Airports are practically your second home.",
+        "categories": ["Airport", "Plane", "Terminal"]
+    }
+}
+
 
 def analyze_checkins(checkins: list) -> dict:
     """
@@ -288,7 +352,227 @@ def analyze_checkins(checkins: list) -> dict:
         for (lat, lng), venues in map_points.items()
     ]
 
+    # One-time venues (visited only once)
+    one_time_venues = sum(1 for count in venue_counts.values() if count == 1)
+    stats["one_time_venues"] = one_time_venues
+    stats["one_time_percentage"] = round(one_time_venues / len(venues) * 100, 1) if venues else 0
+
+    # Furthest venue from home city (most common city)
+    if city_counts and venues:
+        home_city = city_counts.most_common(1)[0][0]
+        stats["home_city"] = home_city
+
+        # Find home city coordinates (average of all venues in home city)
+        home_venues = [v for v in venues.values() if v.get("city") == home_city.split(",")[0]]
+        if home_venues:
+            home_lat = sum(v.get("lat", 0) for v in home_venues if v.get("lat")) / len([v for v in home_venues if v.get("lat")])
+            home_lng = sum(v.get("lng", 0) for v in home_venues if v.get("lng")) / len([v for v in home_venues if v.get("lng")])
+
+            # Find furthest venue
+            max_distance = 0
+            furthest_venue = None
+            for venue_data in venues.values():
+                if venue_data.get("lat") and venue_data.get("lng"):
+                    dist = haversine_distance(home_lat, home_lng, venue_data["lat"], venue_data["lng"])
+                    if dist > max_distance:
+                        max_distance = dist
+                        furthest_venue = venue_data
+
+            if furthest_venue:
+                stats["furthest_venue"] = {
+                    "name": furthest_venue["name"],
+                    "city": furthest_venue["city"],
+                    "country": furthest_venue["country"],
+                    "distance_miles": round(max_distance)
+                }
+
+    # International check-ins
+    us_checkins = sum(1 for checkin in checkins
+                      if checkin.get("venue", {}).get("location", {}).get("country") == "United States")
+    international_checkins = len(checkins) - us_checkins
+    stats["international_checkins"] = international_checkins
+    stats["international_percentage"] = round(international_checkins / len(checkins) * 100, 1) if checkins else 0
+
+    # Day with most unique venues
+    unique_venues_per_day = defaultdict(set)
+    for checkin in checkins:
+        dt = datetime.fromtimestamp(checkin.get("createdAt", 0))
+        date_str = dt.strftime("%Y-%m-%d")
+        venue_name = checkin.get("venue", {}).get("name", "Unknown")
+        unique_venues_per_day[date_str].add(venue_name)
+
+    if unique_venues_per_day:
+        max_unique_day = max(unique_venues_per_day.keys(), key=lambda d: len(unique_venues_per_day[d]))
+        stats["most_unique_venues_day"] = max_unique_day
+        stats["most_unique_venues_count"] = len(unique_venues_per_day[max_unique_day])
+
+    # Longest gap between check-ins
+    if len(sorted_dates) > 1:
+        max_gap = 0
+        gap_start = None
+        gap_end = None
+        for i in range(1, len(sorted_dates)):
+            prev_date = datetime.strptime(sorted_dates[i-1], "%Y-%m-%d")
+            curr_date = datetime.strptime(sorted_dates[i], "%Y-%m-%d")
+            gap = (curr_date - prev_date).days - 1  # Days without check-ins
+            if gap > max_gap:
+                max_gap = gap
+                gap_start = sorted_dates[i-1]
+                gap_end = sorted_dates[i]
+
+        stats["longest_gap_days"] = max_gap
+        stats["longest_gap_start"] = gap_start
+        stats["longest_gap_end"] = gap_end
+
+    # Determine personality type
+    stats["personality"] = determine_personality(stats, category_counts, city_counts)
+
+    # Generate year summary sentence
+    stats["year_summary"] = generate_year_summary(stats, category_counts, city_counts)
+
     return stats
+
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """Calculate distance between two points in miles."""
+    R = 3959  # Earth's radius in miles
+
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    delta_lat = math.radians(lat2 - lat1)
+    delta_lon = math.radians(lon2 - lon1)
+
+    a = math.sin(delta_lat/2)**2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon/2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+
+    return R * c
+
+
+def determine_personality(stats, category_counts, city_counts):
+    """Determine user's check-in personality based on their patterns."""
+    scores = {}
+
+    total_checkins = stats.get("total_checkins", 0)
+    if total_checkins == 0:
+        return PERSONALITY_TYPES["adventurer"]  # Default
+
+    # Score each personality type
+    for type_id, type_info in PERSONALITY_TYPES.items():
+        score = 0
+
+        # Category-based scoring
+        if "categories" in type_info:
+            category_checkins = sum(
+                category_counts.get(cat, 0)
+                for cat in category_counts.keys()
+                if any(keyword.lower() in cat.lower() for keyword in type_info["categories"])
+            )
+            score = category_checkins / total_checkins if total_checkins else 0
+
+        # Threshold-based scoring
+        elif "threshold" in type_info:
+            threshold = type_info["threshold"]
+            if "countries" in threshold:
+                if len(stats.get("countries", [])) >= threshold["countries"]:
+                    score = 0.8
+                if stats.get("unique_cities", 0) >= threshold.get("cities", 0):
+                    score = max(score, 0.9)
+            elif "friend_percentage" in threshold:
+                if stats.get("friend_percentage", 0) >= threshold["friend_percentage"]:
+                    score = stats["friend_percentage"] / 100
+            elif "unique_ratio" in threshold:
+                ratio = stats.get("unique_venues", 0) / total_checkins if total_checkins else 0
+                if ratio >= threshold["unique_ratio"]:
+                    score = ratio
+            elif "home_city_percentage" in threshold:
+                if city_counts:
+                    home_count = city_counts.most_common(1)[0][1]
+                    home_pct = home_count / total_checkins * 100 if total_checkins else 0
+                    if home_pct >= threshold["home_city_percentage"]:
+                        score = home_pct / 100
+
+        # Time-based scoring
+        elif "time" in type_info:
+            time_of_day = stats.get("time_of_day", {})
+            target_time = type_info["time"]
+            time_checkins = time_of_day.get(target_time, 0)
+            total_time = sum(time_of_day.values())
+            if total_time > 0 and time_checkins / total_time > 0.35:
+                score = time_checkins / total_time
+
+        scores[type_id] = score
+
+    # Get highest scoring personality
+    best_type = max(scores.keys(), key=lambda k: scores[k])
+
+    return {
+        "type": best_type,
+        **PERSONALITY_TYPES[best_type]
+    }
+
+
+def generate_year_summary(stats, category_counts, city_counts):
+    """Generate a personalized year-in-a-sentence summary."""
+    parts = []
+
+    # Top categories (keywords)
+    top_cats = category_counts.most_common(3)
+    if top_cats:
+        cat_words = []
+        for cat, _ in top_cats:
+            # Simplify category names
+            cat_lower = cat.lower()
+            if "coffee" in cat_lower:
+                cat_words.append("coffee")
+            elif "restaurant" in cat_lower or "food" in cat_lower:
+                cat_words.append("good food")
+            elif "gym" in cat_lower or "fitness" in cat_lower:
+                cat_words.append("fitness")
+            elif "bar" in cat_lower:
+                cat_words.append("nightlife")
+            elif "airport" in cat_lower:
+                cat_words.append("travel")
+            elif "park" in cat_lower or "trail" in cat_lower:
+                cat_words.append("nature")
+            elif "shop" in cat_lower or "store" in cat_lower:
+                cat_words.append("shopping")
+            else:
+                cat_words.append(cat.lower())
+
+        cat_words = list(dict.fromkeys(cat_words))[:3]  # Dedupe and limit
+        if cat_words:
+            parts.append(f"A year of {', '.join(cat_words)}")
+
+    # Home city and travel
+    if city_counts:
+        home_city = city_counts.most_common(1)[0][0].split(",")[0]
+        other_cities = [c[0].split(",")[0] for c in city_counts.most_common(4)[1:] if c[0] != home_city]
+
+        if other_cities:
+            travel_str = f"in {home_city}, with trips to {' and '.join(other_cities[:2])}"
+            parts.append(travel_str)
+        else:
+            parts.append(f"exploring {home_city}")
+
+    # Streak highlight
+    streak = stats.get("longest_streak", 0)
+    if streak >= 30:
+        parts.append(f"fueled by a {streak}-day streak")
+    elif streak >= 14:
+        parts.append(f"with {streak} days of momentum")
+
+    # Friend highlight
+    friend_pct = stats.get("friend_percentage", 0)
+    if friend_pct >= 60:
+        parts.append("mostly with loved ones by your side")
+    elif friend_pct <= 30:
+        parts.append("embracing solo adventures")
+
+    if parts:
+        summary = " — ".join(parts) + "."
+        return summary[0].upper() + summary[1:]  # Capitalize first letter
+
+    return f"A year of {stats.get('total_checkins', 0)} check-ins and {stats.get('unique_venues', 0)} unique discoveries."
 
 
 def calculate_longest_streak(sorted_dates: list) -> int:

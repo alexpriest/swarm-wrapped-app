@@ -273,6 +273,22 @@
             </div>
         </div>
 
+        <!-- Your Type -->
+        {% if stats.personality %}
+        <div class="section" style="text-align: center;">
+            <h2>{{ stats.personality.emoji }} You're {{ stats.personality.name }}</h2>
+            <p style="font-size: 1.2rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto;">{{ stats.personality.description }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Year Summary -->
+        {% if stats.year_summary %}
+        <div class="section" style="text-align: center;">
+            <h2>🎬 Your 2025 in a Sentence</h2>
+            <p style="font-size: 1.25rem; max-width: 700px; margin: 1rem auto; line-height: 1.8; color: var(--text-primary);">{{ stats.year_summary }}</p>
+        </div>
+        {% endif %}
+
         <!-- Streak -->
         <div class="section">
             <h2>🔥 Longest Streak</h2>
@@ -334,6 +350,61 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- Insights -->
+        <div class="section">
+            <h2>✨ Insights & Highlights</h2>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                {% if stats.first_checkin %}
+                <div class="stat-card" style="text-align: left; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">🎉</span>
+                    <span>Your first check-in of 2025 was at <strong style="color: var(--accent);">{{ stats.first_checkin.venue }}</strong> on {{ stats.first_checkin.date }}.</span>
+                </div>
+                {% endif %}
+
+                {% if stats.furthest_venue %}
+                <div class="stat-card" style="text-align: left; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">🌍</span>
+                    <span>Furthest from home: <strong style="color: var(--accent);">{{ stats.furthest_venue.name }}</strong> in {{ stats.furthest_venue.city }}, {{ stats.furthest_venue.country }} — about {{ "{:,}".format(stats.furthest_venue.distance_miles) }} miles away.</span>
+                </div>
+                {% endif %}
+
+                {% if stats.max_checkins_day %}
+                <div class="stat-card" style="text-align: left; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">🏃</span>
+                    <span>Your busiest day was <strong style="color: var(--accent);">{{ stats.max_checkins_day }}</strong> with {{ stats.max_checkins_count }} check-ins.</span>
+                </div>
+                {% endif %}
+
+                {% if stats.one_time_venues %}
+                <div class="stat-card" style="text-align: left; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">🆕</span>
+                    <span><strong style="color: var(--accent);">{{ stats.one_time_venues }} venues</strong> you visited only once — that's {{ stats.one_time_percentage }}% unique discoveries.</span>
+                </div>
+                {% endif %}
+
+                {% if stats.international_checkins > 0 %}
+                <div class="stat-card" style="text-align: left; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">✈️</span>
+                    <span><strong style="color: var(--accent);">{{ stats.international_checkins }} international check-ins</strong> ({{ stats.international_percentage }}% of your total).</span>
+                </div>
+                {% endif %}
+
+                {% if stats.solo_checkins %}
+                <div class="stat-card" style="text-align: left; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">🧍</span>
+                    <span><strong style="color: var(--accent);">{{ stats.solo_checkins }} solo check-ins</strong> ({{ stats.solo_percentage }}%) — sometimes you're flying solo.</span>
+                </div>
+                {% endif %}
+
+                {% if stats.longest_gap_days and stats.longest_gap_days > 0 %}
+                <div class="stat-card" style="text-align: left; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">🧘</span>
+                    <span>Longest break between check-ins: <strong style="color: var(--accent);">{{ stats.longest_gap_days }} days</strong> — even explorers need rest.</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
 
         <!-- Map -->
         <div class="section">
