@@ -2,6 +2,8 @@
 
 Generate your own Spotify Wrapped-style report from your Foursquare Swarm check-ins.
 
+![Swarm Wrapped Preview](https://alexpriest.github.io/swarm-2025-wrapped/swarm-wrapped-preview.png)
+
 ## Features
 
 - 📊 Total check-ins, venues, cities, and countries
@@ -21,9 +23,19 @@ Generate your own Spotify Wrapped-style report from your Foursquare Swarm check-
 ### Foursquare API Setup
 
 1. Go to [Foursquare Developer Console](https://foursquare.com/developers/apps)
-2. Create a new app
-3. Note your Client ID and Client Secret
-4. Add `http://localhost:8000/callback` as a redirect URI
+2. Sign in with your Foursquare account (create one if needed)
+3. Click **Create a new app**
+4. Fill in the app details:
+   - **App Name**: e.g., "Swarm Wrapped"
+   - **App URL**: Your website or `http://localhost:8000`
+5. After creation, you'll see your **Client ID** and **Client Secret** - save these!
+6. Under **Redirect URIs**, add: `http://localhost:8000/callback`
+   - For production, also add your deployed URL (e.g., `https://yourapp.com/callback`)
+
+**What you need:**
+- `FOURSQUARE_CLIENT_ID` - The Client ID shown in your app dashboard
+- `FOURSQUARE_CLIENT_SECRET` - The Client Secret (click to reveal)
+- `FOURSQUARE_REDIRECT_URI` - Must exactly match what you registered (including trailing slash if any)
 
 ### Installation
 
