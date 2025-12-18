@@ -124,12 +124,24 @@
     <p class="subtitle">See your 2025 in check-ins. Connect your Swarm account to generate your personalized year in review.</p>
 
     {% if authenticated %}
-    <a href="/wrapped" class="connect-btn">
-        <span>View Your Wrapped</span>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
-    </a>
+    <form id="wrapped-form" style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--text-secondary); font-size: 0.9rem;">
+            <input type="checkbox" id="exclude-sensitive" name="exclude_sensitive" style="width: 18px; height: 18px; accent-color: var(--accent);">
+            <span>Exclude churches & schools (privacy)</span>
+        </label>
+        <a href="/wrapped" class="connect-btn" id="wrapped-link">
+            <span>View Your Wrapped</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+        </a>
+    </form>
+    <script>
+        document.getElementById('exclude-sensitive').addEventListener('change', function() {
+            const link = document.getElementById('wrapped-link');
+            link.href = this.checked ? '/wrapped?exclude_sensitive=true' : '/wrapped';
+        });
+    </script>
     {% else %}
     <a href="/login" class="connect-btn">
         <span>Connect Swarm</span>

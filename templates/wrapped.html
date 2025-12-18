@@ -281,14 +281,6 @@
         </div>
         {% endif %}
 
-        <!-- Year Summary -->
-        {% if stats.year_summary %}
-        <div class="section" style="text-align: center;">
-            <h2>🎬 Your 2025 in a Sentence</h2>
-            <p style="font-size: 1.25rem; max-width: 700px; margin: 1rem auto; line-height: 1.8; color: var(--text-primary);">{{ stats.year_summary }}</p>
-        </div>
-        {% endif %}
-
         <!-- Streak -->
         <div class="section">
             <h2>🔥 Longest Streak</h2>
@@ -343,7 +335,7 @@
             <div class="friend-list">
                 {% for friend in stats.top_friends %}
                 <div class="friend-card">
-                    <div class="friend-name">{{ friend.name }}</div>
+                    <div class="friend-name">{{ friend.name.split()[0] }}</div>
                     <div class="friend-count">{{ friend.count }} check-ins</div>
                 </div>
                 {% endfor %}
@@ -414,9 +406,30 @@
             </div>
         </div>
 
+        <!-- Year Summary -->
+        {% if stats.year_summary %}
+        <div class="section" style="text-align: center;">
+            <h2>🎬 Your 2025 in a Sentence</h2>
+            <p style="font-size: 1.25rem; max-width: 700px; margin: 1rem auto; line-height: 1.8; color: var(--text-primary);">{{ stats.year_summary }}</p>
+        </div>
+        {% endif %}
+
         <footer>
             <p>Generated with <a href="https://github.com/alexpriest/swarm-mcp">Swarm Wrapped</a></p>
             <p style="margin-top: 0.5rem;">Your data is processed temporarily and never stored.</p>
+
+            <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px; display: inline-block;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+                    <input type="checkbox" id="privacy-toggle" {% if exclude_sensitive %}checked{% endif %} style="width: 16px; height: 16px; accent-color: var(--accent);">
+                    <span>Exclude churches & schools</span>
+                </label>
+            </div>
+            <script>
+                document.getElementById('privacy-toggle').addEventListener('change', function() {
+                    window.location.href = this.checked ? '/wrapped?exclude_sensitive=true' : '/wrapped';
+                });
+            </script>
+
             <a href="/logout" class="logout-link">← Disconnect & Start Over</a>
         </footer>
     </div>

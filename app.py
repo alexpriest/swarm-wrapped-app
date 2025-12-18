@@ -131,7 +131,7 @@ async def api_generate(request: Request):
 
 
 @app.get("/wrapped", response_class=HTMLResponse)
-async def wrapped(request: Request):
+async def wrapped(request: Request, exclude_sensitive: bool = False):
     """Display the generated wrapped report."""
     token = request.session.get("access_token")
 
@@ -147,11 +147,12 @@ async def wrapped(request: Request):
             "error": "No check-ins found for 2025"
         })
 
-    stats = analyze_checkins(checkins)
+    stats = analyze_checkins(checkins, exclude_sensitive=exclude_sensitive)
 
     return templates.TemplateResponse("wrapped.html", {
         "request": request,
-        "stats": stats
+        "stats": stats,
+        "exclude_sensitive": exclude_sensitive
     })
 
 

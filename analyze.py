@@ -73,18 +73,46 @@ PERSONALITY_TYPES = {
 }
 
 
-def analyze_checkins(checkins: list) -> dict:
+# Categories to exclude when privacy filter is enabled
+SENSITIVE_CATEGORIES = [
+    "church", "cathedral", "mosque", "synagogue", "temple", "chapel",
+    "spiritual center", "religious", "school", "elementary", "middle school",
+    "high school", "preschool", "daycare", "nursery", "kindergarten"
+]
+
+
+def analyze_checkins(checkins: list, exclude_sensitive: bool = False) -> dict:
     """
     Analyze a list of Foursquare check-ins and return statistics.
 
     Args:
         checkins: List of check-in objects from Foursquare API
+        exclude_sensitive: If True, exclude churches and schools for privacy
 
     Returns:
         Dictionary with all computed statistics
     """
     if not checkins:
         return {}
+
+    # Filter out sensitive venues if requested
+    if exclude_sensitive:
+        filtered_checkins = []
+        for checkin in checkins:
+            venue = checkin.get("venue", {})
+            categories = venue.get("categories", [])
+            category_names = [cat.get("name", "").lower() for cat in categories]
+
+            # Check if any category matches sensitive categories
+            is_sensitive = any(
+                any(sensitive in cat_name for sensitive in SENSITIVE_CATEGORIES)
+                for cat_name in category_names
+            )
+
+            if not is_sensitive:
+                filtered_checkins.append(checkin)
+
+        checkins = filtered_checkins
 
     stats = {}
 
@@ -272,7 +300,9 @@ def analyze_checkins(checkins: list) -> dict:
     # Busiest day
     if checkins_per_day:
         max_day = max(checkins_per_day, key=checkins_per_day.get)
-        stats["max_checkins_day"] = max_day
+        # Format date nicely as "April 20" instead of "2025-04-20"
+        max_day_dt = datetime.strptime(max_day, "%Y-%m-%d")
+        stats["max_checkins_day"] = max_day_dt.strftime("%B %d").replace(" 0", " ")  # "April 20"
         stats["max_checkins_count"] = checkins_per_day[max_day]
     else:
         stats["max_checkins_day"] = ""
