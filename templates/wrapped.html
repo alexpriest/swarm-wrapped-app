@@ -878,7 +878,7 @@
         <div class="copy-feedback" id="copy-feedback">Copied to clipboard!</div>
 
         <footer>
-            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.4.1</span></p>
+            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.4.2</span></p>
             <p style="margin-top: 0.5rem;">Your data is processed temporarily and never stored.</p>
 
             <div style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
@@ -1083,14 +1083,35 @@
             const card = document.getElementById('export-card');
             const exportMapContainer = document.getElementById('export-card-map');
 
-            // Insert map into card
+            // Insert map into card with proper aspect ratio
             const mapCanvas = await captureMap();
+            const mapAspect = mapCanvas.width / mapCanvas.height;
+
             exportMapContainer.innerHTML = '';
+            exportMapContainer.style.position = 'relative';
+
             const mapImg = document.createElement('img');
             mapImg.src = mapCanvas.toDataURL('image/png');
-            mapImg.style.width = '100%';
-            mapImg.style.height = '100%';
-            mapImg.style.objectFit = 'cover';
+
+            // Calculate dimensions to cover container while maintaining aspect ratio
+            const containerWidth = 600 - 50; // card width minus padding
+            const containerHeight = 280;
+            const containerAspect = containerWidth / containerHeight;
+
+            if (mapAspect > containerAspect) {
+                // Map is wider - fit height, overflow width
+                mapImg.style.height = '100%';
+                mapImg.style.width = 'auto';
+            } else {
+                // Map is taller - fit width, overflow height
+                mapImg.style.width = '100%';
+                mapImg.style.height = 'auto';
+            }
+
+            mapImg.style.position = 'absolute';
+            mapImg.style.top = '50%';
+            mapImg.style.left = '50%';
+            mapImg.style.transform = 'translate(-50%, -50%)';
             exportMapContainer.appendChild(mapImg);
 
             // Position card for capture
@@ -1127,14 +1148,36 @@
             const card = document.getElementById('export-card-story');
             const exportMapContainer = document.getElementById('export-card-story-map');
 
-            // Insert map into card
+            // Insert map into card with proper aspect ratio
             const mapCanvas = await captureMap();
+            const mapAspect = mapCanvas.width / mapCanvas.height;
+
             exportMapContainer.innerHTML = '';
+            exportMapContainer.style.position = 'relative';
+
             const mapImg = document.createElement('img');
             mapImg.src = mapCanvas.toDataURL('image/png');
-            mapImg.style.width = '100%';
-            mapImg.style.height = '100%';
-            mapImg.style.objectFit = 'cover';
+
+            // Calculate dimensions to cover container while maintaining aspect ratio
+            // Story card is 450px wide with 2rem (32px) padding on each side = 386px inner
+            const containerWidth = 450 - 64;
+            const containerHeight = exportMapContainer.offsetHeight || 300;
+            const containerAspect = containerWidth / containerHeight;
+
+            if (mapAspect > containerAspect) {
+                // Map is wider - fit height, overflow width
+                mapImg.style.height = '100%';
+                mapImg.style.width = 'auto';
+            } else {
+                // Map is taller - fit width, overflow height
+                mapImg.style.width = '100%';
+                mapImg.style.height = 'auto';
+            }
+
+            mapImg.style.position = 'absolute';
+            mapImg.style.top = '50%';
+            mapImg.style.left = '50%';
+            mapImg.style.transform = 'translate(-50%, -50%)';
             exportMapContainer.appendChild(mapImg);
 
             // Position card for capture
