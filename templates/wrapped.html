@@ -468,6 +468,67 @@
             }
         }
 
+        /* Share card (map-focused for social sharing) */
+        .share-card {
+            width: 600px;
+            padding: 2rem;
+            background: linear-gradient(135deg, #fffcf0 0%, #f5f2e6 100%);
+            border-radius: 24px;
+            font-family: 'Work Sans', sans-serif;
+            position: absolute;
+            left: -9999px;
+            top: 0;
+        }
+
+        .share-card-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .share-card-logo {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .share-card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #CB6120;
+        }
+
+        .share-card-map {
+            height: 400px;
+            border-radius: 16px;
+            margin-bottom: 1.25rem;
+            overflow: hidden;
+            background: #e8e5d9;
+        }
+
+        .share-card-footer {
+            text-align: center;
+        }
+
+        .share-card-url {
+            font-size: 1rem;
+            color: #CB6120;
+            font-weight: 500;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .share-card {
+                background: linear-gradient(135deg, #100f0f 0%, #1a1918 100%);
+            }
+            .share-card-title {
+                color: #da702c;
+            }
+            .share-card-map {
+                background: #1a1918;
+            }
+            .share-card-url {
+                color: #da702c;
+            }
+        }
+
         /* Preview modal */
         .preview-modal {
             display: none;
@@ -856,6 +917,20 @@
             </div>
         </div>
 
+        <!-- Hidden Share Card (map-focused for social sharing) -->
+        <div class="share-card" id="share-card">
+            <div class="share-card-header">
+                <div class="share-card-logo">📍</div>
+                <div class="share-card-title">{% if username %}{{ username }}'s{% else %}My{% endif %} Swarm 2025 Wrapped</div>
+            </div>
+
+            <div class="share-card-map" id="share-card-map"></div>
+
+            <div class="share-card-footer">
+                <span class="share-card-url">swarm.alxprst.co</span>
+            </div>
+        </div>
+
         <!-- Preview Modal -->
         <div class="preview-modal" id="preview-modal" onclick="closePreview(event)">
             <div class="preview-modal-content" onclick="event.stopPropagation()">
@@ -878,7 +953,7 @@
         <div class="copy-feedback" id="copy-feedback">Copied to clipboard!</div>
 
         <footer>
-            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.4.2</span></p>
+            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.4.3</span></p>
             <p style="margin-top: 0.5rem;">Your data is processed temporarily and never stored.</p>
 
             <div style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
@@ -1258,43 +1333,111 @@
             pendingDownload = { dataUrl: null, filename: null };
         }
 
-        // Social sharing
-        function shareToThreads() {
-            // Build engaging text without emojis (they show as ? on Threads)
-            let text = `My Swarm 2025 Wrapped\n\n`;
+        // Capture share card (map-focused for social sharing)
+        async function captureShareCard() {
+            const card = document.getElementById('share-card');
+            const exportMapContainer = document.getElementById('share-card-map');
 
-            // Lead with the most impressive stat
-            text += `${shareStats.totalCheckins.toLocaleString()} check-ins this year`;
+            // Insert map into card with proper aspect ratio
+            const mapCanvas = await captureMap();
+            const mapAspect = mapCanvas.width / mapCanvas.height;
 
-            // Add venue exploration context
-            if (shareStats.uniqueVenues > 100) {
-                text += ` across ${shareStats.uniqueVenues.toLocaleString()} different venues`;
-            }
-            text += `.\n\n`;
+            exportMapContainer.innerHTML = '';
+            exportMapContainer.style.position = 'relative';
 
-            // Geographic reach
-            if (shareStats.countries > 1) {
-                text += `${shareStats.uniqueCities} cities in ${shareStats.countries} countries. `;
+            const mapImg = document.createElement('img');
+            mapImg.src = mapCanvas.toDataURL('image/png');
+
+            // Share card is 600px wide with 2rem (32px) padding = 536px inner, map is 400px tall
+            const containerWidth = 536;
+            const containerHeight = 400;
+            const containerAspect = containerWidth / containerHeight;
+
+            if (mapAspect > containerAspect) {
+                mapImg.style.height = '100%';
+                mapImg.style.width = 'auto';
             } else {
-                text += `${shareStats.uniqueCities} cities explored. `;
+                mapImg.style.width = '100%';
+                mapImg.style.height = 'auto';
             }
 
-            // Streak if impressive
-            if (shareStats.longestStreak >= 7) {
-                text += `${shareStats.longestStreak}-day check-in streak. `;
+            mapImg.style.position = 'absolute';
+            mapImg.style.top = '50%';
+            mapImg.style.left = '50%';
+            mapImg.style.transform = 'translate(-50%, -50%)';
+            exportMapContainer.appendChild(mapImg);
+
+            // Position card for capture
+            card.style.position = 'fixed';
+            card.style.left = '0';
+            card.style.top = '0';
+            card.style.opacity = '0';
+            card.style.pointerEvents = 'none';
+
+            await new Promise(r => setTimeout(r, 100));
+
+            const cardCanvas = await html2canvas(card, {
+                scale: 2,
+                backgroundColor: exportBgColor,
+                logging: false,
+                useCORS: true,
+                onclone: (clonedDoc) => {
+                    const clonedCard = clonedDoc.getElementById('share-card');
+                    if (clonedCard) clonedCard.style.opacity = '1';
+                }
+            });
+
+            // Reset card
+            card.style.position = 'absolute';
+            card.style.left = '-9999px';
+            card.style.opacity = '';
+            card.style.pointerEvents = '';
+
+            return cardCanvas;
+        }
+
+        // Social sharing
+        async function shareToThreads() {
+            // Generate share image first
+            showFeedback('Generating share image...');
+
+            try {
+                const canvas = await captureShareCard();
+                const dataUrl = canvas.toDataURL('image/png');
+
+                // Download the image
+                const link = document.createElement('a');
+                link.download = filePrefix + '-share.png';
+                link.href = dataUrl;
+                link.click();
+
+                showFeedback('Image downloaded! Opening Threads...');
+
+                // Wait a moment then open Threads
+                await new Promise(r => setTimeout(r, 500));
+
+            } catch (err) {
+                console.error('Error generating share image:', err);
             }
 
-            // Top venue as a fun detail
-            if (shareStats.topVenue) {
-                text += `\n\nMost visited: ${shareStats.topVenue.name} (${shareStats.topVenue.count}x)`;
+            // Build share text matching user's preferred format
+            const p = shareStats.personality;
+            let text = `📍 My Swarm 2025 Wrapped`;
+            if (p) text += `: "${p.name}"`;
+            text += `\n\n`;
+
+            // Bulleted stats
+            text += `• ${shareStats.totalCheckins.toLocaleString()} check-ins this year across ${shareStats.uniqueVenues.toLocaleString()} different venues.\n`;
+
+            if (shareStats.countries > 1) {
+                text += `• ${shareStats.uniqueCities} cities in ${shareStats.countries} countries.\n`;
+            } else {
+                text += `• ${shareStats.uniqueCities} cities explored.\n`;
             }
 
-            // Chronotype for personality flavor
-            if (shareStats.timePersonality) {
-                text += `\n\nApparently I'm a "${shareStats.timePersonality}"`;
-            }
+            text += `• ${shareStats.longestStreak}-day check-in streak, active ${shareStats.daysActive} days of the year.\n`;
 
-            text += `\n\nGenerate yours at swarm.alxprst.co`;
+            text += `\nGenerate yours at swarm.alxprst.co`;
 
             const url = `https://threads.net/intent/post?text=${encodeURIComponent(text)}`;
             window.open(url, '_blank', 'width=550,height=420');
