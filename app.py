@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
-from analyze import analyze_checkins, analyze_historical_data
+from analyze import analyze_checkins
 
 app = FastAPI(title="Swarm Wrapped")
 
@@ -141,7 +141,6 @@ async def wrapped(request: Request, exclude_sensitive: bool = False):
     # Fetch user profile and check-ins
     user_profile = await fetch_user_profile(token)
     checkins_2025 = await fetch_all_checkins(token, year=2025)
-    all_checkins = await fetch_all_checkins_historical(token)
 
     if not checkins_2025:
         return templates.TemplateResponse("error.html", {
@@ -150,7 +149,11 @@ async def wrapped(request: Request, exclude_sensitive: bool = False):
         })
 
     stats = analyze_checkins(checkins_2025, exclude_sensitive=exclude_sensitive)
-    historical = analyze_historical_data(all_checkins)
+
+    # Get lifetime checkin count from user profile (fast - no extra API calls)
+    lifetime_checkins = None
+    if user_profile:
+        lifetime_checkins = user_profile.get("checkins", {}).get("count")
 
     # Get username for display
     username = None
@@ -162,7 +165,7 @@ async def wrapped(request: Request, exclude_sensitive: bool = False):
     return templates.TemplateResponse("wrapped.html", {
         "request": request,
         "stats": stats,
-        "historical": historical,
+        "lifetime_checkins": lifetime_checkins,
         "exclude_sensitive": exclude_sensitive,
         "username": username
     })
@@ -232,44 +235,6 @@ async def fetch_all_checkins(token: str, year: int = 2025) -> list:
 
             # Safety limit
             if offset > 5000:
-                break
-
-    return checkins
-
-
-async def fetch_all_checkins_historical(token: str) -> list:
-    """Fetch ALL check-ins from Foursquare API (all years)."""
-    checkins = []
-    offset = 0
-    limit = 250  # Max allowed by Foursquare API
-
-    async with httpx.AsyncClient() as client:
-        while True:
-            response = await client.get(
-                f"{FOURSQUARE_API_BASE}/users/self/checkins",
-                params={
-                    "oauth_token": token,
-                    "v": "20231201",
-                    "limit": limit,
-                    "offset": offset,
-                    "sort": "newestfirst"
-                }
-            )
-
-            if response.status_code != 200:
-                break
-
-            data = response.json()
-            items = data.get("response", {}).get("checkins", {}).get("items", [])
-
-            if not items:
-                break
-
-            checkins.extend(items)
-            offset += limit
-
-            # Safety limit (50k check-ins max)
-            if offset > 50000:
                 break
 
     return checkins

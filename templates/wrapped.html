@@ -546,44 +546,17 @@
             </div>
         </div>
 
-        <!-- Historical / Journey Section -->
-        {% if historical and historical.years|length > 1 %}
-        <div class="section">
+        <!-- Lifetime Stats -->
+        {% if lifetime_checkins %}
+        <div class="section" style="text-align: center;">
             <h2>📈 Your Swarm journey</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                {% if historical.insights.years_active %}
-                You've been checking in since {{ historical.insights.first_year }}. That's {{ historical.insights.years_active }} years of adventures!
-                {% endif %}
-                {% if historical.insights.yoy_change is defined %}
-                    {% if historical.insights.yoy_direction == 'up' %}
-                    2025 is {{ historical.insights.yoy_change }}% more active than 2024.
-                    {% elif historical.insights.yoy_direction == 'down' %}
-                    2025 is {{ historical.insights.yoy_change|abs }}% quieter than 2024.
-                    {% endif %}
-                {% endif %}
-            </p>
-            <div class="chart-container">
-                <canvas id="historyChart"></canvas>
-            </div>
-            <div style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem;">
-                {% for year in historical.years[-6:] %}
-                <div class="stat-card" style="{% if year.year == 2025 %}border: 2px solid var(--accent);{% endif %}">
-                    <div class="stat-value" style="font-size: 1.5rem;">{{ year.year }}</div>
-                    <div style="font-size: 1.1rem; font-weight: 600; color: var(--accent);">{{ year.total }}</div>
-                    <div class="stat-label">check-ins</div>
-                    <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
-                        📍 {{ year.top_city }}<br>
-                        🏆 {{ year.top_venue[:20] }}{% if year.top_venue|length > 20 %}...{% endif %}
-                    </div>
+            <div style="padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border);">
+                <div style="font-size: 3rem; font-weight: 600; color: var(--accent);">{{ "{:,}".format(lifetime_checkins) }}</div>
+                <div style="color: var(--text-secondary); font-size: 1.1rem;">lifetime check-ins</div>
+                <div style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">
+                    2025 accounts for <strong style="color: var(--accent);">{{ ((stats.total_checkins / lifetime_checkins) * 100)|round(1) }}%</strong> of your all-time check-ins
                 </div>
-                {% endfor %}
             </div>
-            {% if historical.insights.total_lifetime_checkins %}
-            <div style="text-align: center; margin-top: 1.5rem; padding: 1rem; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border);">
-                <span style="font-size: 2rem; font-weight: 600; color: var(--accent);">{{ "{:,}".format(historical.insights.total_lifetime_checkins) }}</span>
-                <span style="color: var(--text-secondary);"> lifetime check-ins</span>
-            </div>
-            {% endif %}
         </div>
         {% endif %}
 
@@ -729,38 +702,10 @@
             }
         });
 
-        // History Chart (if historical data exists)
-        {% if historical and historical.years|length > 1 %}
-        const historyData = {{ historical.years|tojson|safe }};
-        const historyChart = new Chart(document.getElementById('historyChart'), {
-            type: 'bar',
-            data: {
-                labels: historyData.map(y => y.year),
-                datasets: [{
-                    data: historyData.map(y => y.total),
-                    backgroundColor: historyData.map(y => y.year === 2025 ? '#CB6120' : 'rgba(203, 97, 32, 0.4)'),
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: 'var(--chart-grid)' } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-        {% endif %}
-
         // Fix chart resize on window expand
         window.addEventListener('resize', function() {
             categoryChart.resize();
             hourlyChart.resize();
-            {% if historical and historical.years|length > 1 %}
-            historyChart.resize();
-            {% endif %}
         });
 
         // Map
