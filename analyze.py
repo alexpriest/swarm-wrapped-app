@@ -124,6 +124,7 @@ def analyze_checkins(checkins: list, exclude_sensitive: bool = False) -> dict:
         filtered_checkins = []
         for checkin in checkins:
             venue = checkin.get("venue", {})
+            venue_name = venue.get("name", "").lower()
             categories = venue.get("categories", [])
             category_names = [cat.get("name", "").lower() for cat in categories]
 
@@ -132,6 +133,10 @@ def analyze_checkins(checkins: list, exclude_sensitive: bool = False) -> dict:
                 any(sensitive in cat_name for sensitive in SENSITIVE_CATEGORIES)
                 for cat_name in category_names
             )
+
+            # Also check venue name for sensitive keywords
+            if not is_sensitive:
+                is_sensitive = any(sensitive in venue_name for sensitive in SENSITIVE_CATEGORIES)
 
             if not is_sensitive:
                 filtered_checkins.append(checkin)
