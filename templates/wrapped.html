@@ -90,6 +90,7 @@
             padding: 2rem;
             margin-bottom: 1.5rem;
             border: 1px solid var(--border);
+            overflow: hidden;
         }
 
         .stats-grid {
@@ -108,6 +109,10 @@
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .streak-grid { grid-template-columns: 1fr; }
             h1 { font-size: 2rem; }
+            .streak-number { font-size: 2.5rem; }
+            .streak-highlight { padding: 1.25rem; }
+            .friend-list { flex-direction: column; }
+            .friend-card { width: 100%; }
         }
 
         .stat-card {
@@ -345,6 +350,14 @@
             letter-spacing: 0.5px;
         }
 
+        .export-card-map {
+            height: 280px;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            background: #e8e5d9;
+        }
+
         .export-card-footer {
             text-align: center;
             font-size: 0.8rem;
@@ -354,6 +367,44 @@
         .export-card-url {
             color: #CB6120;
             font-weight: 500;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .export-card {
+                background: linear-gradient(135deg, #100f0f 0%, #1a1918 100%);
+            }
+            .export-card-title {
+                color: #da702c;
+            }
+            .export-card-subtitle {
+                color: #a8a29e;
+            }
+            .export-card-personality {
+                background: #242220;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            }
+            .export-card-personality-name {
+                color: #fffcf0;
+            }
+            .export-card-stat {
+                background: #242220;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            }
+            .export-card-stat-value {
+                color: #da702c;
+            }
+            .export-card-stat-label {
+                color: #a8a29e;
+            }
+            .export-card-map {
+                background: #1a1918 !important;
+            }
+            .export-card-footer {
+                color: #78716c;
+            }
+            .export-card-url {
+                color: #da702c;
+            }
         }
 
         .copy-feedback {
@@ -582,7 +633,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                     </svg>
-                    Download just your map
+                    Download Map
                 </button>
             </div>
         </div>
@@ -630,7 +681,7 @@
                 </div>
             </div>
 
-            <div class="export-card-map" id="export-card-map" style="height: 280px; border-radius: 12px; margin-bottom: 1rem; overflow: hidden; background: #e8e5d9;"></div>
+            <div class="export-card-map" id="export-card-map"></div>
 
             <div class="export-card-footer">
                 Generate yours at <span class="export-card-url">swarm.alxprst.co</span>
@@ -641,7 +692,7 @@
         <div class="copy-feedback" id="copy-feedback">Copied to clipboard!</div>
 
         <footer>
-            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.3.0</span></p>
+            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.3.2</span></p>
             <p style="margin-top: 0.5rem;">Your data is processed temporarily and never stored.</p>
 
             <div style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
@@ -664,6 +715,13 @@
     <script>
         // Detect dark mode for styling
         const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        // Username for file downloads (sanitized)
+        const username = '{{ username|default("", true) }}'.toLowerCase().replace(/[^a-z0-9]/g, '') || 'swarm';
+        const filePrefix = username + '-swarm-wrapped-2025';
+
+        // Background color for export card capture
+        const exportBgColor = isDarkMode ? '#100f0f' : '#fffcf0';
 
         // Chart colors based on color scheme
         const accentColor = isDarkMode ? '#da702c' : '#CB6120';
@@ -727,7 +785,7 @@
 
         // Map
         const mapPoints = {{ stats.map_points|tojson|safe }};
-        const map = L.map('map').setView([30.2672, -97.7431], 10);
+        const map = L.map('map', { preferCanvas: true }).setView([30.2672, -97.7431], 10);
 
         // Use dark tiles in dark mode
         const tileStyle = isDarkMode ? 'dark_all' : 'light_all';
@@ -811,6 +869,12 @@
             });
         }
 
+        // Helper to hide/show map controls for clean exports
+        function setMapControlsVisible(visible) {
+            const controls = document.querySelectorAll('.leaflet-control-zoom, .leaflet-control-attribution');
+            controls.forEach(el => el.style.display = visible ? '' : 'none');
+        }
+
         async function downloadCard() {
             const card = document.getElementById('export-card');
             const exportMapContainer = document.getElementById('export-card-map');
@@ -819,6 +883,9 @@
             showFeedback('Generating image...');
 
             try {
+                // Hide map controls for clean capture
+                setMapControlsVisible(false);
+
                 // Step 1: Capture the main map
                 const mapCanvas = await html2canvas(mainMap, {
                     scale: 2,
@@ -827,20 +894,24 @@
                     logging: false
                 });
 
+                // Restore map controls
+                setMapControlsVisible(true);
+
                 // Step 2: Insert map image into export card
                 exportMapContainer.innerHTML = '';
                 const mapImg = document.createElement('img');
                 mapImg.src = mapCanvas.toDataURL('image/png');
                 mapImg.style.width = '100%';
                 mapImg.style.height = '100%';
-                mapImg.style.objectFit = 'contain';
+                mapImg.style.objectFit = 'cover';
                 exportMapContainer.appendChild(mapImg);
 
-                // Step 3: Move card into view for rendering
+                // Step 3: Make card visible but transparent for rendering
                 card.style.position = 'fixed';
                 card.style.left = '0';
                 card.style.top = '0';
-                card.style.zIndex = '-1';
+                card.style.opacity = '0';
+                card.style.pointerEvents = 'none';
 
                 // Small delay to let image render
                 await new Promise(r => setTimeout(r, 100));
@@ -848,7 +919,7 @@
                 // Step 4: Capture the full export card with map
                 const cardCanvas = await html2canvas(card, {
                     scale: 2,
-                    backgroundColor: '#fffcf0',
+                    backgroundColor: exportBgColor,
                     logging: false,
                     useCORS: true
                 });
@@ -856,11 +927,12 @@
                 // Reset card position
                 card.style.position = 'absolute';
                 card.style.left = '-9999px';
-                card.style.zIndex = '';
+                card.style.opacity = '';
+                card.style.pointerEvents = '';
 
                 // Download the image
                 const link = document.createElement('a');
-                link.download = 'swarm-wrapped-2025.png';
+                link.download = filePrefix + '.png';
                 link.href = cardCanvas.toDataURL('image/png');
                 link.click();
 
@@ -869,6 +941,9 @@
                 console.error('Error generating image:', err);
                 card.style.position = 'absolute';
                 card.style.left = '-9999px';
+                card.style.opacity = '';
+                card.style.pointerEvents = '';
+                setMapControlsVisible(true); // Restore on error too
                 showFeedback('Error generating image');
             }
         }
@@ -879,6 +954,9 @@
             showFeedback('Generating map image...');
 
             try {
+                // Hide map controls for clean capture
+                setMapControlsVisible(false);
+
                 const mapCanvas = await html2canvas(mainMap, {
                     scale: 2,
                     useCORS: true,
@@ -886,14 +964,18 @@
                     logging: false
                 });
 
+                // Restore map controls
+                setMapControlsVisible(true);
+
                 const link = document.createElement('a');
-                link.download = 'swarm-wrapped-2025-map.png';
+                link.download = filePrefix + '-map.png';
                 link.href = mapCanvas.toDataURL('image/png');
                 link.click();
 
                 showFeedback('Map downloaded!');
             } catch (err) {
                 console.error('Error generating map:', err);
+                setMapControlsVisible(true); // Restore on error too
                 showFeedback('Error generating map');
             }
         }
