@@ -375,7 +375,7 @@ def analyze_checkins(checkins: list, exclude_sensitive: bool = False) -> dict:
     max_time = max([("morning", morning), ("afternoon", afternoon), ("evening", evening), ("night", night)], key=lambda x: x[1])
     time_personalities = {
         "morning": "Early Bird",
-        "afternoon": "Day Explorer",
+        "afternoon": "Afternoon Adventurer",
         "evening": "Evening Wanderer",
         "night": "Night Owl"
     }
