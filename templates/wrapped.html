@@ -624,6 +624,8 @@
                 </div>
             </div>
 
+            <div class="export-card-map" id="export-card-map" style="height: 200px; border-radius: 12px; margin-bottom: 1rem; overflow: hidden; background: #f5f2e6;"></div>
+
             <div class="export-card-footer">
                 Generate yours at <span class="export-card-url">swarm.alxprst.co</span>
             </div>
@@ -633,7 +635,7 @@
         <div class="copy-feedback" id="copy-feedback">Copied to clipboard!</div>
 
         <footer>
-            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.2.7</span></p>
+            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.2.8</span></p>
             <p style="margin-top: 0.5rem;">Your data is processed temporarily and never stored.</p>
 
             <div style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
@@ -803,21 +805,48 @@
             });
         }
 
-        function downloadCard() {
+        async function downloadCard() {
             const card = document.getElementById('export-card');
+            const exportMapContainer = document.getElementById('export-card-map');
+            const mainMap = document.getElementById('map');
 
-            // Temporarily move card into view for rendering
-            card.style.position = 'fixed';
-            card.style.left = '0';
-            card.style.top = '0';
-            card.style.zIndex = '-1';
+            showFeedback('Generating image...');
 
-            html2canvas(card, {
-                scale: 2,
-                backgroundColor: '#fffcf0',
-                logging: false,
-                useCORS: true
-            }).then(canvas => {
+            try {
+                // Step 1: Capture the main map
+                const mapCanvas = await html2canvas(mainMap, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false
+                });
+
+                // Step 2: Insert map image into export card
+                exportMapContainer.innerHTML = '';
+                const mapImg = document.createElement('img');
+                mapImg.src = mapCanvas.toDataURL('image/png');
+                mapImg.style.width = '100%';
+                mapImg.style.height = '100%';
+                mapImg.style.objectFit = 'cover';
+                exportMapContainer.appendChild(mapImg);
+
+                // Step 3: Move card into view for rendering
+                card.style.position = 'fixed';
+                card.style.left = '0';
+                card.style.top = '0';
+                card.style.zIndex = '-1';
+
+                // Small delay to let image render
+                await new Promise(r => setTimeout(r, 100));
+
+                // Step 4: Capture the full export card with map
+                const cardCanvas = await html2canvas(card, {
+                    scale: 2,
+                    backgroundColor: '#fffcf0',
+                    logging: false,
+                    useCORS: true
+                });
+
                 // Reset card position
                 card.style.position = 'absolute';
                 card.style.left = '-9999px';
@@ -826,16 +855,16 @@
                 // Download the image
                 const link = document.createElement('a');
                 link.download = 'swarm-wrapped-2025.png';
-                link.href = canvas.toDataURL('image/png');
+                link.href = cardCanvas.toDataURL('image/png');
                 link.click();
 
                 showFeedback('Image downloaded!');
-            }).catch(err => {
+            } catch (err) {
                 console.error('Error generating image:', err);
                 card.style.position = 'absolute';
                 card.style.left = '-9999px';
                 showFeedback('Error generating image');
-            });
+            }
         }
 
         function showFeedback(message) {
