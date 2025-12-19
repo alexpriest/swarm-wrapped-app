@@ -407,6 +407,104 @@
             }
         }
 
+        /* Stories export card (9:16 vertical) */
+        .export-card-story {
+            width: 450px;
+            height: 800px;
+            padding: 2rem;
+            background: linear-gradient(135deg, #fffcf0 0%, #f5f2e6 100%);
+            border-radius: 24px;
+            font-family: 'Work Sans', sans-serif;
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .export-card-story .export-card-header {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .export-card-story .export-card-logo { font-size: 2.5rem; margin-bottom: 0.25rem; }
+        .export-card-story .export-card-title { font-size: 1.5rem; }
+        .export-card-story .export-card-subtitle { font-size: 0.8rem; }
+
+        .export-card-story .export-card-personality {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .export-card-story .export-card-personality-emoji { font-size: 2rem; }
+        .export-card-story .export-card-personality-name { font-size: 1rem; }
+
+        .export-card-story .export-card-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .export-card-story .export-card-stat {
+            padding: 0.75rem;
+        }
+
+        .export-card-story .export-card-stat-value { font-size: 1.25rem; }
+        .export-card-story .export-card-stat-label { font-size: 0.65rem; }
+
+        .export-card-story .export-card-map {
+            flex: 1;
+            min-height: 200px;
+            margin-bottom: 1rem;
+        }
+
+        .export-card-story .export-card-footer { font-size: 0.75rem; }
+
+        @media (prefers-color-scheme: dark) {
+            .export-card-story {
+                background: linear-gradient(135deg, #100f0f 0%, #1a1918 100%);
+            }
+        }
+
+        /* Preview modal */
+        .preview-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .preview-modal.show { display: flex; }
+
+        .preview-modal-content {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: auto;
+            text-align: center;
+        }
+
+        .preview-modal-content img {
+            max-width: 100%;
+            max-height: 60vh;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .preview-modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
         .copy-feedback {
             position: fixed;
             bottom: 2rem;
@@ -614,27 +712,55 @@
 
         <!-- Export Section -->
         <div class="section" style="text-align: center;">
-            <h2>📤 Save your wrapped</h2>
+            <h2>📤 Save & share your wrapped</h2>
             <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Show off your year in check-ins</p>
-            <div class="export-actions">
-                <button class="action-btn action-btn-primary" onclick="copyStats()">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    Copy Stats
-                </button>
-                <button class="action-btn action-btn-secondary" onclick="downloadCard()">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Download Image
-                </button>
-                <button class="action-btn action-btn-secondary" onclick="downloadMap()">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                    </svg>
-                    Download Map
-                </button>
+
+            <div style="margin-bottom: 1.5rem;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">Download</p>
+                <div class="export-actions">
+                    <button class="action-btn action-btn-primary" onclick="previewAndDownload('card')">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Download Image
+                    </button>
+                    <button class="action-btn action-btn-secondary" onclick="previewAndDownload('story')">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Download for Stories
+                    </button>
+                    <button class="action-btn action-btn-secondary" onclick="previewAndDownload('map')">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        Download Map
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">Share</p>
+                <div class="export-actions">
+                    <button class="action-btn action-btn-secondary" onclick="copyStats()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy Stats
+                    </button>
+                    <button class="action-btn action-btn-secondary" onclick="shareToTwitter()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        Share on X
+                    </button>
+                    <button class="action-btn action-btn-secondary" onclick="shareToThreads()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.59 12c.025 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.798-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.96-.065-1.182.408-2.256 1.333-3.024.898-.746 2.132-1.17 3.474-1.194 1.09-.02 2.104.15 3.03.488-.015-1.138-.134-2.058-.397-2.74-.321-.827-.822-1.394-1.576-1.782-.825-.425-1.878-.617-3.22-.587l-.063-2.118c1.678-.05 3.065.217 4.125.794 1.028.56 1.78 1.387 2.236 2.46.395.93.6 2.028.64 3.424.89.455 1.662 1.01 2.296 1.66 1.15 1.18 1.775 2.657 1.855 4.391.085 1.878-.508 3.6-1.763 5.124C18.702 22.988 15.99 23.97 12.186 24zm-.09-7.873c-.882.027-1.573.27-2.001.704-.387.393-.548.878-.517 1.435.034.61.311 1.091.825 1.43.545.358 1.274.532 2.108.488 1.043-.056 1.833-.45 2.418-1.205.46-.594.762-1.382.896-2.336-.92-.322-1.945-.518-3.07-.518l-.66.002z"/>
+                        </svg>
+                        Share on Threads
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -688,11 +814,78 @@
             </div>
         </div>
 
+        <!-- Hidden Stories Export Card (9:16 vertical) -->
+        <div class="export-card-story" id="export-card-story">
+            <div class="export-card-header">
+                <div class="export-card-logo">📍</div>
+                <div class="export-card-title">Swarm 2025 Wrapped</div>
+                <div class="export-card-subtitle">My year in check-ins</div>
+            </div>
+
+            {% if stats.personality %}
+            <div class="export-card-personality">
+                <div class="export-card-personality-emoji">{{ stats.personality.emoji }}</div>
+                <div class="export-card-personality-name">{{ stats.personality.name }}</div>
+            </div>
+            {% endif %}
+
+            <div class="export-card-stats">
+                <div class="export-card-stat">
+                    <div class="export-card-stat-value">{{ stats.total_checkins }}</div>
+                    <div class="export-card-stat-label">check-ins</div>
+                </div>
+                <div class="export-card-stat">
+                    <div class="export-card-stat-value">{{ stats.unique_venues }}</div>
+                    <div class="export-card-stat-label">venues</div>
+                </div>
+                <div class="export-card-stat">
+                    <div class="export-card-stat-value">{{ stats.unique_cities }}</div>
+                    <div class="export-card-stat-label">cities</div>
+                </div>
+                <div class="export-card-stat">
+                    <div class="export-card-stat-value">{{ stats.countries|length }}</div>
+                    <div class="export-card-stat-label">countries</div>
+                </div>
+                <div class="export-card-stat">
+                    <div class="export-card-stat-value">{{ stats.longest_streak }}</div>
+                    <div class="export-card-stat-label">day streak</div>
+                </div>
+                <div class="export-card-stat">
+                    <div class="export-card-stat-value">{{ stats.days_active }}</div>
+                    <div class="export-card-stat-label">days active</div>
+                </div>
+            </div>
+
+            <div class="export-card-map" id="export-card-story-map"></div>
+
+            <div class="export-card-footer">
+                Generate yours at <span class="export-card-url">swarm.alxprst.co</span>
+            </div>
+        </div>
+
+        <!-- Preview Modal -->
+        <div class="preview-modal" id="preview-modal" onclick="closePreview(event)">
+            <div class="preview-modal-content" onclick="event.stopPropagation()">
+                <img id="preview-image" src="" alt="Preview">
+                <div class="preview-modal-actions">
+                    <button class="action-btn action-btn-primary" onclick="confirmDownload()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Download
+                    </button>
+                    <button class="action-btn action-btn-secondary" onclick="closePreview()">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Copy feedback toast -->
         <div class="copy-feedback" id="copy-feedback">Copied to clipboard!</div>
 
         <footer>
-            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.3.3</span></p>
+            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.4.0</span></p>
             <p style="margin-top: 0.5rem;">Your data is processed temporarily and never stored.</p>
 
             <div style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
@@ -875,116 +1068,181 @@
             controls.forEach(el => el.style.display = visible ? '' : 'none');
         }
 
-        async function downloadCard() {
+        // Preview state
+        let pendingDownload = { dataUrl: null, filename: null };
+
+        // Capture map to canvas
+        async function captureMap() {
+            const mainMap = document.getElementById('map');
+            setMapControlsVisible(false);
+            const canvas = await html2canvas(mainMap, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                logging: false
+            });
+            setMapControlsVisible(true);
+            return canvas;
+        }
+
+        // Capture export card (square format)
+        async function captureCard() {
             const card = document.getElementById('export-card');
             const exportMapContainer = document.getElementById('export-card-map');
-            const mainMap = document.getElementById('map');
 
-            showFeedback('Generating image...');
+            // Insert map into card
+            const mapCanvas = await captureMap();
+            exportMapContainer.innerHTML = '';
+            const mapImg = document.createElement('img');
+            mapImg.src = mapCanvas.toDataURL('image/png');
+            mapImg.style.width = '100%';
+            mapImg.style.height = '100%';
+            mapImg.style.objectFit = 'cover';
+            exportMapContainer.appendChild(mapImg);
+
+            // Position card for capture
+            card.style.position = 'fixed';
+            card.style.left = '0';
+            card.style.top = '0';
+            card.style.opacity = '0';
+            card.style.pointerEvents = 'none';
+
+            await new Promise(r => setTimeout(r, 100));
+
+            const cardCanvas = await html2canvas(card, {
+                scale: 2,
+                backgroundColor: exportBgColor,
+                logging: false,
+                useCORS: true,
+                onclone: (clonedDoc) => {
+                    const clonedCard = clonedDoc.getElementById('export-card');
+                    if (clonedCard) clonedCard.style.opacity = '1';
+                }
+            });
+
+            // Reset card
+            card.style.position = 'absolute';
+            card.style.left = '-9999px';
+            card.style.opacity = '';
+            card.style.pointerEvents = '';
+
+            return cardCanvas;
+        }
+
+        // Capture stories card (9:16 vertical)
+        async function captureStoryCard() {
+            const card = document.getElementById('export-card-story');
+            const exportMapContainer = document.getElementById('export-card-story-map');
+
+            // Insert map into card
+            const mapCanvas = await captureMap();
+            exportMapContainer.innerHTML = '';
+            const mapImg = document.createElement('img');
+            mapImg.src = mapCanvas.toDataURL('image/png');
+            mapImg.style.width = '100%';
+            mapImg.style.height = '100%';
+            mapImg.style.objectFit = 'cover';
+            exportMapContainer.appendChild(mapImg);
+
+            // Position card for capture
+            card.style.position = 'fixed';
+            card.style.left = '0';
+            card.style.top = '0';
+            card.style.opacity = '0';
+            card.style.pointerEvents = 'none';
+
+            await new Promise(r => setTimeout(r, 100));
+
+            const cardCanvas = await html2canvas(card, {
+                scale: 2,
+                backgroundColor: exportBgColor,
+                logging: false,
+                useCORS: true,
+                onclone: (clonedDoc) => {
+                    const clonedCard = clonedDoc.getElementById('export-card-story');
+                    if (clonedCard) clonedCard.style.opacity = '1';
+                }
+            });
+
+            // Reset card
+            card.style.position = 'absolute';
+            card.style.left = '-9999px';
+            card.style.opacity = '';
+            card.style.pointerEvents = '';
+
+            return cardCanvas;
+        }
+
+        // Preview and download handler
+        async function previewAndDownload(type) {
+            showFeedback('Generating preview...');
 
             try {
-                // Hide map controls for clean capture
-                setMapControlsVisible(false);
+                let canvas, filename;
 
-                // Step 1: Capture the main map
-                const mapCanvas = await html2canvas(mainMap, {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    logging: false
-                });
+                if (type === 'card') {
+                    canvas = await captureCard();
+                    filename = filePrefix + '.png';
+                } else if (type === 'story') {
+                    canvas = await captureStoryCard();
+                    filename = filePrefix + '-story.png';
+                } else if (type === 'map') {
+                    canvas = await captureMap();
+                    filename = filePrefix + '-map.png';
+                }
 
-                // Restore map controls
-                setMapControlsVisible(true);
+                const dataUrl = canvas.toDataURL('image/png');
+                pendingDownload = { dataUrl, filename };
 
-                // Step 2: Insert map image into export card
-                exportMapContainer.innerHTML = '';
-                const mapImg = document.createElement('img');
-                mapImg.src = mapCanvas.toDataURL('image/png');
-                mapImg.style.width = '100%';
-                mapImg.style.height = '100%';
-                mapImg.style.objectFit = 'cover';
-                exportMapContainer.appendChild(mapImg);
+                // Show preview modal
+                document.getElementById('preview-image').src = dataUrl;
+                document.getElementById('preview-modal').classList.add('show');
 
-                // Step 3: Make card visible but transparent for rendering
-                card.style.position = 'fixed';
-                card.style.left = '0';
-                card.style.top = '0';
-                card.style.opacity = '0';
-                card.style.pointerEvents = 'none';
-
-                // Small delay to let image render
-                await new Promise(r => setTimeout(r, 100));
-
-                // Step 4: Capture the full export card with map
-                const cardCanvas = await html2canvas(card, {
-                    scale: 2,
-                    backgroundColor: exportBgColor,
-                    logging: false,
-                    useCORS: true,
-                    onclone: (clonedDoc) => {
-                        // Reset opacity on the clone so it renders visible
-                        const clonedCard = clonedDoc.getElementById('export-card');
-                        if (clonedCard) {
-                            clonedCard.style.opacity = '1';
-                        }
-                    }
-                });
-
-                // Reset card position
-                card.style.position = 'absolute';
-                card.style.left = '-9999px';
-                card.style.opacity = '';
-                card.style.pointerEvents = '';
-
-                // Download the image
-                const link = document.createElement('a');
-                link.download = filePrefix + '.png';
-                link.href = cardCanvas.toDataURL('image/png');
-                link.click();
-
-                showFeedback('Image downloaded!');
             } catch (err) {
-                console.error('Error generating image:', err);
-                card.style.position = 'absolute';
-                card.style.left = '-9999px';
-                card.style.opacity = '';
-                card.style.pointerEvents = '';
-                setMapControlsVisible(true); // Restore on error too
+                console.error('Error generating preview:', err);
+                setMapControlsVisible(true);
                 showFeedback('Error generating image');
             }
         }
 
-        async function downloadMap() {
-            const mainMap = document.getElementById('map');
-
-            showFeedback('Generating map image...');
-
-            try {
-                // Hide map controls for clean capture
-                setMapControlsVisible(false);
-
-                const mapCanvas = await html2canvas(mainMap, {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    logging: false
-                });
-
-                // Restore map controls
-                setMapControlsVisible(true);
-
+        function confirmDownload() {
+            if (pendingDownload.dataUrl) {
                 const link = document.createElement('a');
-                link.download = filePrefix + '-map.png';
-                link.href = mapCanvas.toDataURL('image/png');
+                link.download = pendingDownload.filename;
+                link.href = pendingDownload.dataUrl;
                 link.click();
-
-                showFeedback('Map downloaded!');
-            } catch (err) {
-                console.error('Error generating map:', err);
-                setMapControlsVisible(true); // Restore on error too
-                showFeedback('Error generating map');
+                showFeedback('Image downloaded!');
             }
+            closePreview();
+        }
+
+        function closePreview(event) {
+            if (event && event.target !== document.getElementById('preview-modal')) return;
+            document.getElementById('preview-modal').classList.remove('show');
+            pendingDownload = { dataUrl: null, filename: null };
+        }
+
+        // Social sharing
+        function shareToTwitter() {
+            const p = shareStats.personality;
+            let text = `📍 My Swarm 2025 Wrapped\n\n`;
+            if (p) text += `${p.emoji} ${p.name}\n\n`;
+            text += `${shareStats.totalCheckins.toLocaleString()} check-ins · ${shareStats.uniqueVenues.toLocaleString()} venues · ${shareStats.uniqueCities} cities\n\n`;
+            text += `Generate yours: swarm.alxprst.co`;
+
+            const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank', 'width=550,height=420');
+        }
+
+        function shareToThreads() {
+            const p = shareStats.personality;
+            let text = `📍 My Swarm 2025 Wrapped\n\n`;
+            if (p) text += `${p.emoji} ${p.name}\n\n`;
+            text += `${shareStats.totalCheckins.toLocaleString()} check-ins · ${shareStats.uniqueVenues.toLocaleString()} venues · ${shareStats.uniqueCities} cities\n\n`;
+            text += `Generate yours: swarm.alxprst.co`;
+
+            const url = `https://threads.net/intent/post?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank', 'width=550,height=420');
         }
 
         function showFeedback(message) {

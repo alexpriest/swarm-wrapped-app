@@ -131,16 +131,30 @@ async def api_generate(request: Request):
 
 
 @app.get("/wrapped", response_class=HTMLResponse)
-async def wrapped(request: Request, exclude_sensitive: bool = False):
+async def wrapped(request: Request, exclude_sensitive: bool = False, refresh: bool = False):
     """Display the generated wrapped report."""
     token = request.session.get("access_token")
 
     if not token:
         return RedirectResponse(url="/login")
 
-    # Fetch user profile and check-ins
-    user_profile = await fetch_user_profile(token)
-    checkins_2025 = await fetch_all_checkins(token, year=2025)
+    # Check for cached data (unless refresh requested)
+    cached_checkins = request.session.get("checkins_2025") if not refresh else None
+    cached_profile = request.session.get("user_profile") if not refresh else None
+
+    # Fetch user profile (use cache if available)
+    if cached_profile:
+        user_profile = cached_profile
+    else:
+        user_profile = await fetch_user_profile(token)
+        request.session["user_profile"] = user_profile
+
+    # Fetch check-ins (use cache if available)
+    if cached_checkins:
+        checkins_2025 = cached_checkins
+    else:
+        checkins_2025 = await fetch_all_checkins(token, year=2025)
+        request.session["checkins_2025"] = checkins_2025
 
     if not checkins_2025:
         return templates.TemplateResponse("error.html", {
