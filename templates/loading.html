@@ -126,8 +126,6 @@
 
     <script>
         async function generateWrapped() {
-            const steps = ['step1', 'step2', 'step3', 'step4'];
-
             function markDone(stepId) {
                 const step = document.getElementById(stepId);
                 step.classList.remove('pending');
@@ -135,32 +133,24 @@
                 step.querySelector('.checkmark').textContent = '✓';
             }
 
-            // Step 1: Connecting
-            await new Promise(r => setTimeout(r, 500));
+            // Spread out the visual progress over ~6 seconds
+            // The real work happens when /wrapped loads
+
+            await new Promise(r => setTimeout(r, 800));
             markDone('step1');
 
-            // Step 2-4: Fetch and process
-            try {
-                markDone('step2');
-                const response = await fetch('/api/generate');
+            await new Promise(r => setTimeout(r, 2500));
+            markDone('step2');
 
-                if (!response.ok) {
-                    throw new Error('Failed to generate wrapped');
-                }
+            await new Promise(r => setTimeout(r, 2000));
+            markDone('step3');
 
-                markDone('step3');
-                await new Promise(r => setTimeout(r, 300));
-                markDone('step4');
+            await new Promise(r => setTimeout(r, 800));
+            markDone('step4');
 
-                // Redirect to wrapped page
-                await new Promise(r => setTimeout(r, 500));
-                window.location.href = '/wrapped';
-
-            } catch (error) {
-                console.error('Error:', error);
-                document.querySelector('.subtitle').textContent = 'Something went wrong. Please try again.';
-                document.querySelector('.spinner').style.display = 'none';
-            }
+            // Small pause then redirect
+            await new Promise(r => setTimeout(r, 400));
+            window.location.href = '/wrapped';
         }
 
         generateWrapped();
