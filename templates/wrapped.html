@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% if username %}{{ username }}'s{% else %}Your{% endif %} Swarm 2025 wrapped</title>
+    <title>{% if username %}{{ username }}'s{% else %}Your{% endif %} Swarm 2025 Wrapped</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📍</text></svg>">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
@@ -373,7 +373,7 @@
     <div class="container">
         <header>
             <div class="logo">📍</div>
-            <h1>Swarm 2025 wrapped</h1>
+            <h1>Swarm 2025 Wrapped</h1>
             <p class="subtitle">{% if username %}{{ username }}'s{% else %}Your{% endif %} year in check-ins</p>
         </header>
 
@@ -570,7 +570,7 @@
         <div class="export-card" id="export-card">
             <div class="export-card-header">
                 <div class="export-card-logo">📍</div>
-                <div class="export-card-title">Swarm 2025 wrapped</div>
+                <div class="export-card-title">Swarm 2025 Wrapped</div>
                 <div class="export-card-subtitle">My year in check-ins</div>
             </div>
 
@@ -578,6 +578,7 @@
             <div class="export-card-personality">
                 <div class="export-card-personality-emoji">{{ stats.personality.emoji }}</div>
                 <div class="export-card-personality-name">{{ stats.personality.name }}</div>
+                <div class="export-card-personality-desc" style="font-size: 0.75rem; color: #78716c; margin-top: 0.25rem; max-width: 280px; margin-left: auto; margin-right: auto;">{{ stats.personality.description }}</div>
             </div>
             {% endif %}
 
@@ -744,16 +745,16 @@
             const p = shareStats.personality;
             const topVenue = shareStats.topVenue;
 
-            let text = `📍 My Swarm 2025 wrapped\n\n`;
+            let text = `📍 My Swarm 2025 Wrapped\n\n`;
 
             if (p) {
-                text += `${p.emoji} ${p.name}\n\n`;
+                text += `${p.emoji} ${p.name}\n${p.description}\n\n`;
             }
 
             text += `📊 The Stats:\n`;
             text += `• ${shareStats.totalCheckins.toLocaleString()} check-ins at ${shareStats.uniqueVenues.toLocaleString()} venues\n`;
             text += `• ${shareStats.uniqueCities} cities across ${shareStats.countries} ${shareStats.countries === 1 ? 'country' : 'countries'}\n`;
-            text += `• 🔥 ${shareStats.longestStreak}-day streak\n`;
+            text += `• ${shareStats.longestStreak}-day streak\n`;
             text += `• ${shareStats.daysActive} days active\n`;
 
             if (topVenue) {

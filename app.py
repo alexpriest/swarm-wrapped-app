@@ -148,10 +148,7 @@ async def wrapped(request: Request, exclude_sensitive: bool = False):
             "error": "No check-ins found for 2025"
         })
 
-    # Get timezone offset from user profile (in minutes)
-    tz_offset_minutes = user_profile.get("timeZoneOffset", 0) if user_profile else 0
-
-    stats = analyze_checkins(checkins, exclude_sensitive=exclude_sensitive, tz_offset_minutes=tz_offset_minutes)
+    stats = analyze_checkins(checkins, exclude_sensitive=exclude_sensitive)
 
     # Get username for display
     username = None

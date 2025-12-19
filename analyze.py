@@ -105,14 +105,13 @@ def format_date_ordinal(dt: datetime) -> str:
     return f"{dt.strftime('%B')} {ordinal(dt.day)}"
 
 
-def analyze_checkins(checkins: list, exclude_sensitive: bool = False, tz_offset_minutes: int = 0) -> dict:
+def analyze_checkins(checkins: list, exclude_sensitive: bool = False) -> dict:
     """
     Analyze a list of Foursquare check-ins and return statistics.
 
     Args:
         checkins: List of check-in objects from Foursquare API
         exclude_sensitive: If True, exclude churches and schools for privacy
-        tz_offset_minutes: Timezone offset in minutes from UTC (from user profile)
 
     Returns:
         Dictionary with all computed statistics
@@ -211,12 +210,12 @@ def analyze_checkins(checkins: list, exclude_sensitive: bool = False, tz_offset_
         # Count countries
         country_counts[venue_info["country"]] += 1
 
-        # Time analysis - apply timezone offset
+        # Time analysis - use each check-in's own timezone offset for local time
         created_at = checkin.get("createdAt", 0)
-        # Use utcfromtimestamp to get actual UTC time (not server local time)
+        checkin_tz_offset = checkin.get("timeZoneOffset", 0)  # Minutes from UTC
+        # Convert UTC timestamp to datetime, then apply check-in's local timezone
         dt_utc = datetime.utcfromtimestamp(created_at)
-        # Apply user's timezone offset (e.g., -360 for UTC-6)
-        dt = dt_utc + timedelta(minutes=tz_offset_minutes)
+        dt = dt_utc + timedelta(minutes=checkin_tz_offset)
 
         hourly[dt.hour] += 1
         daily[dt.strftime("%A")] += 1
@@ -389,10 +388,11 @@ def analyze_checkins(checkins: list, exclude_sensitive: bool = False, tz_offset_
         first_checkin = min(checkins, key=lambda x: x.get("createdAt", 0))
         last_checkin = max(checkins, key=lambda x: x.get("createdAt", 0))
 
+        # Use each check-in's own timezone offset
         first_dt_utc = datetime.utcfromtimestamp(first_checkin.get("createdAt", 0))
         last_dt_utc = datetime.utcfromtimestamp(last_checkin.get("createdAt", 0))
-        first_dt = first_dt_utc + timedelta(minutes=tz_offset_minutes)
-        last_dt = last_dt_utc + timedelta(minutes=tz_offset_minutes)
+        first_dt = first_dt_utc + timedelta(minutes=first_checkin.get("timeZoneOffset", 0))
+        last_dt = last_dt_utc + timedelta(minutes=last_checkin.get("timeZoneOffset", 0))
 
         stats["first_checkin"] = {
             "venue": first_checkin.get("venue", {}).get("name", "Unknown"),
@@ -455,7 +455,10 @@ def analyze_checkins(checkins: list, exclude_sensitive: bool = False, tz_offset_
     # Day with most unique venues
     unique_venues_per_day = defaultdict(set)
     for checkin in checkins:
-        dt = datetime.fromtimestamp(checkin.get("createdAt", 0))
+        created_at = checkin.get("createdAt", 0)
+        checkin_tz = checkin.get("timeZoneOffset", 0)
+        dt_utc = datetime.utcfromtimestamp(created_at)
+        dt = dt_utc + timedelta(minutes=checkin_tz)
         date_str = dt.strftime("%Y-%m-%d")
         venue_name = checkin.get("venue", {}).get("name", "Unknown")
         unique_venues_per_day[date_str].add(venue_name)
