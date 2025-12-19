@@ -633,7 +633,7 @@
         <div class="copy-feedback" id="copy-feedback">Copied to clipboard!</div>
 
         <footer>
-            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.2.4</span></p>
+            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.2.6</span></p>
             <p style="margin-top: 0.5rem;">Your data is processed temporarily and never stored.</p>
 
             <div style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
@@ -654,6 +654,13 @@
     </div>
 
     <script>
+        // Detect dark mode for styling
+        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        // Chart colors based on color scheme
+        const accentColor = isDarkMode ? '#da702c' : '#CB6120';
+        const accentColorAlpha = isDarkMode ? 'rgba(218, 112, 44, 0.1)' : 'rgba(203, 97, 32, 0.1)';
+
         // Category Chart
         const categoryData = {{ stats.top_categories|tojson|safe }};
         const categoryChart = new Chart(document.getElementById('categoryChart'), {
@@ -662,7 +669,7 @@
                 labels: categoryData.slice(0, 8).map(c => c.name),
                 datasets: [{
                     data: categoryData.slice(0, 8).map(c => c.count),
-                    backgroundColor: '#CB6120',
+                    backgroundColor: accentColor,
                     borderRadius: 4
                 }]
             },
@@ -685,8 +692,8 @@
                 labels: Array.from({length: 24}, (_, i) => i === 0 ? '12am' : i < 12 ? `${i}am` : i === 12 ? '12pm' : `${i-12}pm`),
                 datasets: [{
                     data: Object.values(hourlyData),
-                    borderColor: '#CB6120',
-                    backgroundColor: 'rgba(203, 97, 32, 0.1)',
+                    borderColor: accentColor,
+                    backgroundColor: accentColorAlpha,
                     fill: true,
                     tension: 0.4,
                     pointRadius: 2
@@ -713,7 +720,10 @@
         const mapPoints = {{ stats.map_points|tojson|safe }};
         const map = L.map('map').setView([30.2672, -97.7431], 10);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        // Use dark tiles in dark mode
+        const tileStyle = isDarkMode ? 'dark_all' : 'light_all';
+
+        L.tileLayer(`https://{s}.basemaps.cartocdn.com/${tileStyle}/{z}/{x}/{y}{r}.png`, {
             attribution: '&copy; OpenStreetMap &copy; CARTO',
             subdomains: 'abcd',
             maxZoom: 20
@@ -728,8 +738,8 @@
 
             const marker = L.circleMarker([loc.lat, loc.lng], {
                 radius: Math.min(3 + Math.sqrt(totalCount) * 2, 15),
-                fillColor: '#CB6120',
-                color: '#fff',
+                fillColor: accentColor,
+                color: isDarkMode ? '#1a1918' : '#fff',
                 weight: 1,
                 opacity: 1,
                 fillOpacity: 0.7
