@@ -422,12 +422,20 @@
         </div>
         {% endif %}
 
-        <!-- Streak -->
+        <!-- Streak & Lifetime -->
         <div class="section">
-            <h2>🔥 Longest streak</h2>
-            <div class="streak-highlight">
-                <div class="streak-number">{{ stats.longest_streak }}</div>
-                <div class="streak-label">consecutive days of check-ins</div>
+            <h2>🔥 Streaks & milestones</h2>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                <div class="streak-highlight">
+                    <div class="streak-number">{{ stats.longest_streak }}</div>
+                    <div class="streak-label">day streak</div>
+                </div>
+                {% if lifetime_checkins %}
+                <div class="streak-highlight">
+                    <div class="streak-number">{{ "{:,}".format(lifetime_checkins) }}</div>
+                    <div class="streak-label">lifetime check-ins</div>
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -546,20 +554,6 @@
             </div>
         </div>
 
-        <!-- Lifetime Stats -->
-        {% if lifetime_checkins %}
-        <div class="section" style="text-align: center;">
-            <h2>📈 Your Swarm journey</h2>
-            <div style="padding: 1.5rem; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border);">
-                <div style="font-size: 3rem; font-weight: 600; color: var(--accent);">{{ "{:,}".format(lifetime_checkins) }}</div>
-                <div style="color: var(--text-secondary); font-size: 1.1rem;">lifetime check-ins</div>
-                <div style="margin-top: 1rem; color: var(--text-muted); font-size: 0.9rem;">
-                    2025 accounts for <strong style="color: var(--accent);">{{ ((stats.total_checkins / lifetime_checkins) * 100)|round(1) }}%</strong> of your all-time check-ins
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
         <!-- Export Section -->
         <div class="section" style="text-align: center;">
             <h2>📤 Save your wrapped</h2>
@@ -632,7 +626,7 @@
         <div class="copy-feedback" id="copy-feedback">Copied to clipboard!</div>
 
         <footer>
-            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.1</span></p>
+            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.2</span></p>
             <p style="margin-top: 0.5rem;">Your data is processed temporarily and never stored.</p>
 
             <div style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">

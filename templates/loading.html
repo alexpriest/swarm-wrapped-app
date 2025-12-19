@@ -133,23 +133,19 @@
                 step.querySelector('.checkmark').textContent = '✓';
             }
 
-            // Spread out the visual progress over ~6 seconds
-            // The real work happens when /wrapped loads
-
-            await new Promise(r => setTimeout(r, 800));
+            await new Promise(r => setTimeout(r, 300));
             markDone('step1');
 
-            await new Promise(r => setTimeout(r, 2500));
+            await new Promise(r => setTimeout(r, 400));
             markDone('step2');
 
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 300));
             markDone('step3');
 
-            await new Promise(r => setTimeout(r, 800));
+            await new Promise(r => setTimeout(r, 200));
             markDone('step4');
 
-            // Small pause then redirect
-            await new Promise(r => setTimeout(r, 400));
+            await new Promise(r => setTimeout(r, 200));
             window.location.href = '/wrapped';
         }
 
