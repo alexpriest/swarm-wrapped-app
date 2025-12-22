@@ -2,7 +2,7 @@
 
 Generate your own Spotify Wrapped-style report from your Foursquare Swarm check-ins.
 
-![Swarm Wrapped Preview](https://alexpriest.github.io/swarm-2025-wrapped/swarm-wrapped-preview.png)
+![Swarm Wrapped Preview](static/readme.png)
 
 ## Features
 
