@@ -4,6 +4,8 @@ Swarm Wrapped - A web app to generate Spotify Wrapped-style reports from Foursqu
 
 import os
 import httpx
+import logging
+import time
 from datetime import datetime
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -13,6 +15,13 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from analyze import analyze_checkins
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="Swarm Wrapped")
 
 # Session middleware for storing OAuth tokens
@@ -20,6 +29,25 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=os.environ.get("SESSION_SECRET", "dev-secret-change-in-production")
 )
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log all requests with timing info."""
+    start_time = time.time()
+
+    response = await call_next(request)
+
+    # Calculate request duration
+    duration_ms = (time.time() - start_time) * 1000
+
+    # Log request (skip static files to reduce noise)
+    if not request.url.path.startswith("/static"):
+        logger.info(
+            f"{request.method} {request.url.path} - {response.status_code} - {duration_ms:.0f}ms"
+        )
+
+    return response
 
 # Static files and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -138,37 +166,59 @@ async def wrapped(request: Request, exclude_sensitive: bool = False):
     if not token:
         return RedirectResponse(url="/login")
 
-    # Fetch user profile and check-ins
-    user_profile = await fetch_user_profile(token)
-    checkins_2025 = await fetch_all_checkins(token, year=2025)
+    try:
+        # Fetch user profile and check-ins
+        user_profile = await fetch_user_profile(token)
+        checkins_2025 = await fetch_all_checkins(token, year=2025)
 
-    if not checkins_2025:
-        return templates.TemplateResponse("error.html", {
+        if not checkins_2025:
+            return templates.TemplateResponse("error.html", {
+                "request": request,
+                "error": "No check-ins found for 2025"
+            })
+
+        stats = analyze_checkins(checkins_2025, exclude_sensitive=exclude_sensitive)
+
+        # Get lifetime checkin count from user profile (fast - no extra API calls)
+        lifetime_checkins = None
+        if user_profile:
+            lifetime_checkins = user_profile.get("checkins", {}).get("count")
+
+        # Get username for display
+        username = None
+        if user_profile:
+            first_name = user_profile.get("firstName", "")
+            last_name = user_profile.get("lastName", "")
+            username = f"{first_name} {last_name}".strip() or user_profile.get("handle", "")
+
+        return templates.TemplateResponse("wrapped.html", {
             "request": request,
-            "error": "No check-ins found for 2025"
+            "stats": stats,
+            "lifetime_checkins": lifetime_checkins,
+            "exclude_sensitive": exclude_sensitive,
+            "username": username
         })
 
-    stats = analyze_checkins(checkins_2025, exclude_sensitive=exclude_sensitive)
+    except RateLimitError:
+        logger.warning("Rate limit error serving /wrapped")
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "error": "We're experiencing high traffic right now! Swarm Wrapped is getting a lot of love. Please try again in a few minutes."
+        })
 
-    # Get lifetime checkin count from user profile (fast - no extra API calls)
-    lifetime_checkins = None
-    if user_profile:
-        lifetime_checkins = user_profile.get("checkins", {}).get("count")
+    except APIError as e:
+        logger.error(f"API error serving /wrapped: {e}")
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "error": "Something went wrong connecting to Foursquare. Please try again in a moment."
+        })
 
-    # Get username for display
-    username = None
-    if user_profile:
-        first_name = user_profile.get("firstName", "")
-        last_name = user_profile.get("lastName", "")
-        username = f"{first_name} {last_name}".strip() or user_profile.get("handle", "")
-
-    return templates.TemplateResponse("wrapped.html", {
-        "request": request,
-        "stats": stats,
-        "lifetime_checkins": lifetime_checkins,
-        "exclude_sensitive": exclude_sensitive,
-        "username": username
-    })
+    except Exception as e:
+        logger.error(f"Unexpected error serving /wrapped: {e}")
+        return templates.TemplateResponse("error.html", {
+            "request": request,
+            "error": "Something unexpected happened. Please try again."
+        })
 
 
 @app.get("/logout")
@@ -196,6 +246,16 @@ async def fetch_user_profile(token: str) -> dict:
         return data.get("response", {}).get("user", {})
 
 
+class RateLimitError(Exception):
+    """Raised when Foursquare API rate limit is hit."""
+    pass
+
+
+class APIError(Exception):
+    """Raised when Foursquare API returns an error."""
+    pass
+
+
 async def fetch_all_checkins(token: str, year: int = 2025) -> list:
     """Fetch all check-ins for a given year from Foursquare API."""
     checkins = []
@@ -221,8 +281,14 @@ async def fetch_all_checkins(token: str, year: int = 2025) -> list:
                 }
             )
 
+            # Handle rate limiting
+            if response.status_code == 429:
+                logger.warning("Foursquare API rate limit hit")
+                raise RateLimitError("Too many requests to Foursquare API")
+
             if response.status_code != 200:
-                break
+                logger.error(f"Foursquare API error: {response.status_code}")
+                raise APIError(f"Foursquare API returned {response.status_code}")
 
             data = response.json()
             items = data.get("response", {}).get("checkins", {}).get("items", [])
