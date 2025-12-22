@@ -64,6 +64,12 @@ FOURSQUARE_TOKEN_URL = "https://foursquare.com/oauth2/access_token"
 FOURSQUARE_API_BASE = "https://api.foursquare.com/v2"
 
 
+@app.get("/health")
+async def health():
+    """Health check endpoint for uptime monitoring."""
+    return {"status": "ok"}
+
+
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     """Landing page with connect button."""
