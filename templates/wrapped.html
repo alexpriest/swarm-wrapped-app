@@ -121,7 +121,6 @@
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .streak-grid { grid-template-columns: 1fr; }
             h1 { font-size: 2rem; }
-            .streak-number { font-size: 2.5rem; }
             .streak-highlight { padding: 1.25rem; }
             .friend-list { flex-direction: column; }
             .friend-card { width: 100%; }
@@ -158,7 +157,7 @@
         }
 
         .streak-number {
-            font-size: 5rem;
+            font-size: clamp(2.5rem, 10vw, 5rem);
             font-weight: 600;
             color: var(--accent);
             line-height: 1;
@@ -848,7 +847,7 @@
         <div class="copy-feedback" id="copy-feedback">Copied to clipboard!</div>
 
         <footer>
-            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.4.7</span></p>
+            <p>Made with ❤️ in ATX by <a href="https://alexpriest.com">Alex Priest</a> · <a href="https://buymeacoffee.com/alexpriest">Buy me a coffee ☕</a> · <span style="color: var(--text-muted);">v1.4.8</span></p>
             <p style="margin-top: 0.5rem;">Your data is processed temporarily and never stored.</p>
 
             <div style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
